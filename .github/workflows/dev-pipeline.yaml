@@ -74,7 +74,7 @@ jobs:
           name: test-script
           path: .
       - name: Start docker compose
-        run: docker-compose up
+        run: docker-compose up -d
       - name: Run test script
         run: chmod +x curl-test.sh && ./curl-test.sh
       - name: Stop docker containers
