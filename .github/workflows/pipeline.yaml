@@ -57,6 +57,24 @@ jobs:
     - name: build and test
       run: cd frontend && go build && go test  
 
+  Curl-tests:
+    runs-on: [self-hosted, prod]
+    needs: [push-docker-images]
+    steps:
+      - name: Start redis
+        run: docker run -p 6379:6379 -d redis
+      - name: Start backend
+        run: docker run -d rasmj/backend:latest
+      - name: Start frontend
+        run: docker run -p 8080:8080 -d rasmj/frontend:latest
+      - name: Download test-script
+        uses: actions/download-artifact@v3
+        with:
+          name: test-script
+          path: .
+      - name: Run test script
+        run: chmod +x curl-test.sh && ./curl-test.sh
+
   Deploy-to-Kubernetes:
     runs-on: [self-hosted, stag]
     needs: [Performance-test, push-docker-images]

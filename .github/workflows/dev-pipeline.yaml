@@ -26,6 +26,11 @@ jobs:
         with:
           name: kube-dep
           path: kubernetes-deployment.yaml
+      - name: Upload test script
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-script
+          path: curl-test.sh
 
   Performance-test: 
     runs-on: [self-hosted, dev]
@@ -44,7 +49,7 @@ jobs:
       run: cd frontend && go build && go test
 
   push-docker-images:
-    runs-on: [self-hosted, prod]
+    runs-on: [self-hosted, dev]
     needs: [Clone-down, Performance-test]
     steps:
     - name: download artifacts
@@ -56,6 +61,24 @@ jobs:
       run: chmod +x ci/build-docker-dev.sh && ci/build-docker-dev.sh
     - name: push docker
       run: chmod +x ci/push-docker-dev.sh && ci/push-docker-dev.sh
+
+  Curl-tests:
+    runs-on: [self-hosted, dev]
+    needs: [push-docker-images]
+    steps:
+      - name: Start redis
+        run: docker run -p 6379:6379 -d redis
+      - name: Start backend
+        run: docker run -d rasmj/backend:latest-dev
+      - name: Start frontend
+        run: docker run -p 8080:8080 -d rasmj/frontend:latest-dev
+      - name: Download test-script
+        uses: actions/download-artifact@v3
+        with:
+          name: test-script
+          path: .
+      - name: Run test script
+        run: chmod +x curl-test.sh && ./curl-test.sh
 
 
   Deploy-to-Kubernetes:
