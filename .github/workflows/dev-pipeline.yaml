@@ -34,6 +34,22 @@ jobs:
             curl-test.sh
             docker-compose.yaml
 
+  Curl-tests:
+    runs-on: [self-hosted, dev]
+    needs: [Clone-down]
+    steps:
+      - name: Download test-script
+        uses: actions/download-artifact@v3
+        with:
+          name: test-script
+          path: .
+      - name: Start docker compose
+        run: docker-compose up -d
+      - name: Run test script
+        run: chmod +x curl-test.sh && ./curl-test.sh
+      - name: Stop docker containers
+        run: docker-compose down
+
   Performance-test: 
     runs-on: [self-hosted, dev]
     needs: [Clone-down]
@@ -52,7 +68,7 @@ jobs:
 
   push-docker-images:
     runs-on: [self-hosted, dev]
-    needs: [Clone-down, Performance-test]
+    needs: [Clone-down, Performance-test, Curl-tests]
     steps:
     - name: download artifacts
       uses: actions/download-artifact@v3
@@ -63,22 +79,6 @@ jobs:
       run: chmod +x ci/build-docker-dev.sh && ci/build-docker-dev.sh
     - name: push docker
       run: chmod +x ci/push-docker-dev.sh && ci/push-docker-dev.sh
-
-  Curl-tests:
-    runs-on: [self-hosted, dev]
-    needs: [push-docker-images]
-    steps:
-      - name: Download test-script
-        uses: actions/download-artifact@v3
-        with:
-          name: test-script
-          path: .
-      - name: Start docker compose
-        run: docker-compose up -d
-      - name: Run test script
-        run: chmod +x curl-test.sh && ./curl-test.sh
-      - name: Stop docker containers
-        run: docker-compose down
 
 
   Deploy-to-Kubernetes:

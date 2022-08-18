@@ -50,24 +50,9 @@ jobs:
     - name: build and test
       run: cd frontend && go build && go test 
 
-  push-docker-images:
-    runs-on: [self-hosted, stag]
-    needs: [Clone-down, Performance-test]
-    steps:
-    - name: download artifacts
-      uses: actions/download-artifact@v3
-      with: 
-          name: code
-          path: .
-    - name: build docker
-      run: chmod +x ci/build-docker-stag.sh && ci/build-docker-stag.sh
-    - name: push docker
-      run: chmod +x ci/push-docker-stag.sh && ci/push-docker-stag.sh
-
-
   Curl-tests:
     runs-on: [self-hosted, stag]
-    needs: [push-docker-images]
+    needs: [Clone-down]
     steps:
       - name: Download test-script
         uses: actions/download-artifact@v3
@@ -80,6 +65,20 @@ jobs:
         run: chmod +x curl-test.sh && ./curl-test.sh
       - name: Stop docker containers
         run: docker-compose down
+
+  push-docker-images:
+    runs-on: [self-hosted, stag]
+    needs: [Clone-down, Performance-test, Curl-tests]
+    steps:
+    - name: download artifacts
+      uses: actions/download-artifact@v3
+      with: 
+          name: code
+          path: .
+    - name: build docker
+      run: chmod +x ci/build-docker-stag.sh && ci/build-docker-stag.sh
+    - name: push docker
+      run: chmod +x ci/push-docker-stag.sh && ci/push-docker-stag.sh
 
   Deploy-to-Kubernetes:
     runs-on: [self-hosted, stag]
