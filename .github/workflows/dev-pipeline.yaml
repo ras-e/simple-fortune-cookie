@@ -2,7 +2,7 @@ name: Fortune cookie
 on: 
   push:
     branches:
-      - main
+      - "feature/**"
   
 env:
   docker_username: ${{ secrets.USERNAME }}
@@ -10,7 +10,7 @@ env:
   git_commit: ${{ github.sha }}
 jobs:
   Clone-down:
-    runs-on: [self-hosted, prod]
+    runs-on: [self-hosted, dev]
     steps:
       - name: Clone
         uses: actions/checkout@v2
@@ -20,22 +20,8 @@ jobs:
           name: code
           path: .
 
-  push-docker-images-job:
-    runs-on: [self-hosted, prod]
-    needs: [Clone-down]
-    steps:
-    - name: download artifacts
-      uses: actions/download-artifact@v2
-      with: 
-          name: code
-          path: .
-    - name: build docker
-      run: chmod +x ci/build-docker.sh && ci/build-docker.sh
-    - name: push docker
-      run: chmod +x ci/push-docker.sh && ci/push-docker.sh
-
   Performance-test: 
-    runs-on: [self-hosted, prod]
+    runs-on: [self-hosted, dev]
     needs: [Clone-down]
     steps: 
     - name: Go
