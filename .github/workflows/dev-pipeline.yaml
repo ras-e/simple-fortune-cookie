@@ -30,7 +30,9 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: test-script
-          path: curl-test.sh
+          path: |
+            curl-test.sh
+            docker-compose.yaml
 
   Performance-test: 
     runs-on: [self-hosted, dev]
@@ -66,21 +68,17 @@ jobs:
     runs-on: [self-hosted, dev]
     needs: [push-docker-images]
     steps:
-      - name: Start redis
-        run: docker run -p 6379:6379 -d redis
-      - name: Start backend
-        run: docker run -d rasmj/backend:latest-dev
-      - name: Start frontend
-        run: docker run -p 8080:8080 -d rasmj/frontend:latest-dev
       - name: Download test-script
         uses: actions/download-artifact@v3
         with:
           name: test-script
           path: .
+      - name: Start docker compose
+        run: docker-compose up
       - name: Run test script
         run: chmod +x curl-test.sh && ./curl-test.sh
       - name: Stop docker containers
-        run: docker kill redis-db backend frontend
+        run: docker-compose down
 
 
   Deploy-to-Kubernetes:
