@@ -21,6 +21,11 @@ jobs:
           path: |
             .
             !.git
+      - name: Upload kubernetes deployment yaml
+        uses: actions/upload-artifact@v3
+        with:
+          name: kube-dep
+          path: kubernetes-deployment.yaml
 
   Performance-test: 
     runs-on: [self-hosted, dev]
@@ -36,5 +41,18 @@ jobs:
         name: code
         path: .
     - name: build and test
-      run: cd frontend && go build && go test             
+      run: cd frontend && go build && go test  
+
+
+  Deploy-to-Kubernetes:
+    runs-on: [self-hosted, stag]
+    needs: [Performance-test]
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: kube-dep
+          path: .
+      - name: Apply with kubectl
+        run: kubectl apply -f kubernetes-deployment.yaml
   
