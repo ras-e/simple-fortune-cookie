@@ -14,4 +14,13 @@ services:
   backend:
     build:
       context: backend
-      dockerfile: Dockerfile 
+      dockerfile: Dockerfile
+    environment:
+      - REDIS_DNS=redis
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7.0.4
+
+
