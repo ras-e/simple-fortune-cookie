@@ -41,12 +41,26 @@ jobs:
         name: code
         path: .
     - name: build and test
-      run: cd frontend && go build && go test  
+      run: cd frontend && go build && go test
+
+  push-docker-images:
+    runs-on: [self-hosted, prod]
+    needs: [Clone-down, Performance-test]
+    steps:
+    - name: download artifacts
+      uses: actions/download-artifact@v3
+      with: 
+          name: code
+          path: .
+    - name: build docker
+      run: chmod +x ci/build-docker-dev.sh && ci/build-docker-dev.sh
+    - name: push docker
+      run: chmod +x ci/push-docker-dev.sh && ci/push-docker-dev.sh
 
 
   Deploy-to-Kubernetes:
     runs-on: [self-hosted, stag]
-    needs: [Performance-test]
+    needs: [Performance-test, push-docker-images]
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v3
@@ -54,5 +68,5 @@ jobs:
           name: kube-dep
           path: .
       - name: Apply with kubectl
-        run: kubectl apply -f kubernetes-deployment.yaml
+        run: kubectl apply -f kubernetes-dev-deployment.yaml
   
