@@ -26,6 +26,11 @@ jobs:
         with:
           name: kube-dep
           path: kubernetes-deployment.yaml
+      - name: Upload test script
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-script
+          path: curl-test.sh
 
   push-docker-images:
     runs-on: [self-hosted, prod]
@@ -74,6 +79,8 @@ jobs:
           path: .
       - name: Run test script
         run: chmod +x curl-test.sh && ./curl-test.sh
+      - name: Stop docker containers
+        run: docker kill redis-db backend frontend
 
   Deploy-to-Kubernetes:
     runs-on: [self-hosted, stag]

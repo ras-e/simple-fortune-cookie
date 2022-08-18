@@ -26,6 +26,11 @@ jobs:
         with:
           name: kube-dep
           path: kubernetes-deployment.yaml
+      - name: Upload test script
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-script
+          path: curl-test.sh
 
   Performance-test: 
     runs-on: [self-hosted, stag]
@@ -59,15 +64,15 @@ jobs:
 
 
   Curl-tests:
-    runs-on: [self-hosted, dev]
+    runs-on: [self-hosted, stag]
     needs: [push-docker-images]
     steps:
       - name: Start redis
-        run: docker run -p 6379:6379 -d redis
+        run: docker run --name redis-db -p 6379:6379 -d redis
       - name: Start backend
-        run: docker run -d rasmj/backend:latest-stag
+        run: docker run -d --name backend rasmj/backend:latest-stag
       - name: Start frontend
-        run: docker run -p 8080:8080 -d rasmj/frontend:latest-stag
+        run: docker run -p 8080:8080 -d --name frontend rasmj/frontend:latest-stag
       - name: Download test-script
         uses: actions/download-artifact@v3
         with:
@@ -75,6 +80,8 @@ jobs:
           path: .
       - name: Run test script
         run: chmod +x curl-test.sh && ./curl-test.sh
+      - name: Stop docker containers
+        run: docker kill redis-db backend frontend
 
   Deploy-to-Kubernetes:
     runs-on: [self-hosted, stag]

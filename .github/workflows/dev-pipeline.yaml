@@ -31,6 +31,8 @@ jobs:
         with:
           name: test-script
           path: curl-test.sh
+      - name: Stop docker containers
+        run: docker kill redis-db backend frontend
 
   Performance-test: 
     runs-on: [self-hosted, dev]
