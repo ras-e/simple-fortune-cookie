@@ -15,7 +15,8 @@ spec:
         app: frontend
     spec:
       containers:
-      - image: rasmj/frontend
+      - image: rasmj/frontend:latest
+        imagePullPolicy: Always
         name: frontend
         env:
         - name: BACKEND_DNS
@@ -59,7 +60,8 @@ spec:
         app: backend
     spec:
       containers:
-      - image: rasmj/backend
+      - image: rasmj/backend:latest
+        imagePullPolicy: Always
         name: backend
         env:
         - name: REDIS_DNS
