@@ -26,6 +26,13 @@ jobs:
         with:
           name: kube-dep
           path: kubernetes-deployment.yaml
+      - name: Upload test script
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-script
+          path: |
+            curl-test.sh
+            docker-compose.yaml
 
   Performance-test: 
     runs-on: [self-hosted, stag]
@@ -43,9 +50,25 @@ jobs:
     - name: build and test
       run: cd frontend && go build && go test 
 
+  Curl-tests:
+    runs-on: [self-hosted, stag]
+    needs: [Clone-down]
+    steps:
+      - name: Download test-script
+        uses: actions/download-artifact@v3
+        with:
+          name: test-script
+          path: .
+      - name: Start docker compose
+        run: docker-compose up -d
+      - name: Run test script
+        run: chmod +x curl-test.sh && ./curl-test.sh
+      - name: Stop docker containers
+        run: docker-compose down
+
   push-docker-images:
-    runs-on: [self-hosted, prod]
-    needs: [Clone-down, Performance-test]
+    runs-on: [self-hosted, stag]
+    needs: [Clone-down, Performance-test, Curl-tests]
     steps:
     - name: download artifacts
       uses: actions/download-artifact@v3
